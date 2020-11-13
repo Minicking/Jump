@@ -41,6 +41,9 @@ export class GameManager extends Component {
     //当前游戏的运行状态
     private _curState: GameStatus = GameStatus.INIT;
 
+    //队友游戏运行状态
+    private _otherState: GameStatus = GameStatus.INIT;
+
     //游戏过程中的方块列表
     private _groundList: Node[] = [];
 
@@ -52,8 +55,20 @@ export class GameManager extends Component {
 
     set curState(stat: GameStatus){
         switch (stat) {
-            case GameStatus.INIT:
-                this.createGround()
+            case GameStatus.MATCHING:
+                /* 在此处调用SDK进入匹配队列 */
+                break;
+
+            case GameStatus.RUNING:
+                this.Player.control = true;
+                break;
+            
+            case GameStatus.WAIT:
+                this.Player.control = false;
+                break;
+            
+            case GameStatus.END:
+                this.Player.control = false;
                 break;
         
             default:
@@ -61,15 +76,24 @@ export class GameManager extends Component {
         }
     }
 
+    // todo 帧同步监听 游戏状态切换在此处根据同步信息进行切换
+    // listen
+
     start (){
         this.camera.node.getPosition(this._origin_camera_pos)
-        this.Player.onNext = this.onNext.bind(this);
+        this.Player.onJumpComplete = this.onJumpComplete.bind(this);
+        this.Player.onJumpDead = this.onJumpDead.bind(this);
         this.Player._ground = this.curGround;
         this.nextGround = this.curGround;
         this._groundList.push(this.curGround);
-
-        this.curState = GameStatus.INIT;
+        this.createGround()
+        // this.gameStart();
     }
+
+    gameStart(){
+        this.curState = GameStatus.RUNING;
+    }
+
     reset (){
         for (let index = 0; index < this._groundList.length; index++) {
             let node = this._groundList.pop();
@@ -101,7 +125,6 @@ export class GameManager extends Component {
             if(this.Player.stat_face == FaceStatus.LU){
                 this.Player.stat_face = FaceStatus.RU;
             }
-            
             new_pos.x -= dz;
             new_pos.y = 5;
         }
@@ -156,8 +179,18 @@ export class GameManager extends Component {
         this.camera.node.setPosition(camera_pos)
     }
 
-    onNext(event){
+    onJumpComplete(event){
         this.createGround();
+        if(this._otherState != GameStatus.offline){
+            // 此处调用SDK发送消息给队友,将队友的状态改为行动状态
+            this.curState = GameStatus.WAIT;
+        }
+    }
+    onJumpDead(event){
+        if(this._otherState != GameStatus.offline){
+            // 此处调用SDK发送消息给队友,将队友的状态改为行动状态
+            this.curState = GameStatus.WAIT;
+        }
     }
 
     update (dt: number) {

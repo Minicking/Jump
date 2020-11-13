@@ -6,10 +6,12 @@ enum FaceStatus {
 }
 
 enum GameStatus {
-    INIT,
-    WAIT,
-    JUMP,
-    END
+    INIT,//进游戏的初始状态
+    MATCHING,//匹配中状态
+    RUNING,//自己进行行动状态
+    WAIT,//等待另一方行动状态
+    offline,//掉线状态
+    END//结束进行结算状态
 }
 
 export {FaceStatus, GameStatus}
