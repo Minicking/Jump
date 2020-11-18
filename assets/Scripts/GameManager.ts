@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Prefab, Vec3, deserialize, random, randomRange, instantiate, GFXSamplerState, Game, Camera, NodePool, tween, randomRangeInt, Canvas, LabelComponent, CCInteger, Quat } from 'cc';
+import { _decorator, Component, Node, Prefab, Vec3, deserialize, random, randomRange, instantiate, GFXSamplerState, Game, Camera, NodePool, tween, randomRangeInt, Canvas, LabelComponent, CCInteger, Quat, CCFloat } from 'cc';
 import { Player } from './Player'
 import { GameStatus, FaceStatus} from './Const'
 import { getRotaionQuat } from './Util'
@@ -38,7 +38,15 @@ export class GameManager extends Component {
 
     //最大的方块存留数,多余的地块会被销毁
     @property({type: CCInteger})
-    public maxGround: Number = 6;
+    public maxGround: number = 6;
+
+    @property({type: CCFloat})
+    public randMin: number = 1;
+
+    @property({type: CCFloat})
+    public randMax: number = 3;
+
+
 
     //下一个方块对象
     private nextGround: Node = null;
@@ -129,7 +137,7 @@ export class GameManager extends Component {
         this.nextGround.getPosition(cur_pos);
         Vec3.copy(new_pos, cur_pos)
 
-        let dz = randomRange(2, 4) * -1;
+        let dz = randomRange(this.randMin, this.randMax) * -1;
 
         if(randomRangeInt(1, 100) <= 50){
 
