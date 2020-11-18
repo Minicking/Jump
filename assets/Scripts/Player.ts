@@ -1,6 +1,6 @@
 import { _decorator, Component, Vec3, systemEvent, SystemEvent, Animation, Node, EventKeyboard, macro, math, Quat, Enum, CCFloat, MeshRenderer, SkeletalAnimationComponent, Vec2, tween, EventTouch, EventAcceleration } from 'cc';
 import { FaceStatus} from './Const'
-import { posInRange } from './Util'
+import { posInRect, getJumpAxis, getRotaionQuat, getPosWithVec } from './Util'
 const { ccclass, property } = _decorator;
 
 
@@ -29,56 +29,31 @@ export class Player extends Component {
     public max_distance = 4;        //最大跳跃距离
     
     private _origin_y = 0;
-    private _origin_rotation = new Quat();
+    // private _origin_rotation = new Quat();
     private _cur_rotation = new Quat();
-    private _jump_time = 0;
+    private _cur_position = new Vec3();
+    private _jump_time = 0;             //跳跃过程中的当前时刻
     private _distance = 0;              //水平方向跳跃距离
-    private _stat_face = FaceStatus.LU;     //移动面向方位
+    private _face = new Vec2();
+    private _axis = new Vec3();
+
     private _stat_power = false;         //是否处于蓄力状态
     private _stat_jump = false;          //是否处于跳跃状态
+
     public _ground: Node = null;
     public _next_ground: Node = null;
     private _control = false;
 
     public onJumpComplete: () => void; //发送跳跃完成事件
     public onJumpDead: () => void; //发送跳跃死亡事件
-
     public onDead: () => void; //死亡时触发GameManager的死亡事件
     
     set control(val){
-        console.log('set control:')
-        console.log(val)
         this._control = val;
     }
 
     get control(){
         return this._control;
-    }
-
-    set stat_face(val){
-        let temp_quat = new Quat();
-
-        switch (val) {
-            case FaceStatus.LU:
-                this._stat_face = FaceStatus.LU;
-                this.node.setRotation(this._origin_rotation);
-                this._cur_rotation.set(this._origin_rotation);
-                break;
-            
-            case FaceStatus.RU:
-                this._stat_face = FaceStatus.RU;
-                Quat.rotateY(temp_quat, this._origin_rotation, 90*180/3.1415926);
-                this.node.setRotation(temp_quat);
-                this._cur_rotation.set(temp_quat);
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    get stat_face(){
-        return this._stat_face;
     }
 
 
@@ -93,15 +68,12 @@ export class Player extends Component {
         systemEvent.on(SystemEvent.EventType.TOUCH_END, this.onTouchUp, this);
         systemEvent.on(SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
         this._origin_y = this.node.position.y;
-        this.node.getRotation(this._origin_rotation);
+        // this.node.getRotation(this._origin_rotation);
         this.node.getRotation(this._cur_rotation);
     }
 
     onTouchDown(event) {
         if(this.control){
-            console.log('touch:')
-            console.log(event.getLocation())
-            console.log(event)
             if(this._stat_power == false && this._stat_jump == false){
                 this._distance = 0;
                 this._stat_power = true;
@@ -132,14 +104,6 @@ export class Player extends Component {
                     this._stat_power = true;
                 }
             }else if (event.keyCode == macro.KEY.up){
-                
-                if (this._stat_face == FaceStatus.LU){
-                    this._stat_face= FaceStatus.RB;
-                    
-                }else{
-                    this._stat_face= FaceStatus.LU;
-                    
-                }
     
             }
         }
@@ -169,6 +133,11 @@ export class Player extends Component {
         if(!this._stat_power){
             this._stat_jump = true;
             this._jump_time = 0;
+            this.get_face(this._face);
+            this._axis = getJumpAxis(this.node, this._next_ground);
+            console.log('旋转轴:'+this._axis)
+            this.node.getRotation(this._cur_rotation);
+            this.node.getPosition(this._cur_position)
         }
     }
 
@@ -188,11 +157,6 @@ export class Player extends Component {
                 groundScale.y = 1 - this._distance / this.max_distance * 0.5;
                 this._ground.setScale(groundScale);
 
-
-                
-                // this.node.getScale(tempVec_1);
-                // tempVec_1.y -= 0.002;
-                // this.node.setScale(tempVec_1);
             }
 
         }
@@ -219,35 +183,33 @@ export class Player extends Component {
                 jump_end = true;
 
             }
-            this.node.getPosition(tempVec_1);
-            let tp = new Quat();
-            // Quat.copy(tp, this._origin_rotation);
-
-            tempVec_1.y = y;
             
-            let face_r = new Vec3(0, 0, 0);
-            if(this._stat_face == FaceStatus.LU){
-                face_r.x = -1;
-                tempVec_1.z -= val;
-            }else if(this._stat_face == FaceStatus.RU){
-                face_r.z = -1;
-                tempVec_1.x += val;
-            }else if(this._stat_face == FaceStatus.RB){
-                face_r.x = 1;
-                tempVec_1.z += val;
-            }else if(this._stat_face == FaceStatus.LB){
-                face_r.z = 1;
-                tempVec_1.x -= val;
-            }
-            Quat.rotateAround(tp, this._cur_rotation, face_r, roa*3.1415/180);
+            // 跳跃旋转轴
+            
+            // 当前所在位置
+            var cur_pos = new Vec3();
 
-            this.node.setPosition(tempVec_1);
-            this.node.setRotation(tp);
+            this.node.getPosition(cur_pos);
+
+            var new_pos = getPosWithVec(cur_pos, this._face,val);
+            new_pos.y = y;
+
+            Quat.rotateAround(tempQuat_1, this._cur_rotation, this._axis, roa*3.1415/180);
+
+            this.node.setPosition(new_pos);
+            this.node.setRotation(tempQuat_1);
             if(jump_end){
                 this.action_jump_end()
             }
 
         }
+    }
+
+    get_face(out:Vec2) {
+        this.node.getPosition(tempVec_1);
+        this._next_ground.getPosition(tempVec_2);
+        out.set(tempVec_2.x - tempVec_1.x, tempVec_2.z - tempVec_1.z);
+        console.log('获取到面向方向向量:'+out)
     }
 
     action_jump_end(){
@@ -258,11 +220,12 @@ export class Player extends Component {
         this._ground.getPosition(cur_ground_pos)
         this._next_ground.getPosition(next_ground_pos)
         this.node.getPosition(cur_pos)
-        console.log()
-        if(posInRange(new Vec2(cur_pos.x, cur_pos.z), new Vec2(cur_ground_pos.x, cur_ground_pos.z), 0.5)){
+
+        if(posInRect(new Vec2(cur_pos.x, cur_pos.z), new Vec2(cur_ground_pos.x, cur_ground_pos.z), 0.5)){
             console.log('no jump over')
-        }else if(posInRange(new Vec2(cur_pos.x, cur_pos.z), new Vec2(next_ground_pos.x, next_ground_pos.z), .5)){
+        }else if(posInRect(new Vec2(cur_pos.x, cur_pos.z), new Vec2(next_ground_pos.x, next_ground_pos.z), .5)){
             if(this.onJumpComplete){
+                this.node.getPosition(this._cur_position)
                 this.onJumpComplete();
             }
         }else{
@@ -277,10 +240,10 @@ export class Player extends Component {
 
     }
     reset(){
-        let cur_ground_pos = new Vec3();
-        this._ground.getPosition(cur_ground_pos);
-        let pos = new Vec3(cur_ground_pos.x, this._origin_y, cur_ground_pos.z);
-        this.node.setPosition(pos);
+        // let cur_ground_pos = new Vec3();
+        // this._ground.getPosition(cur_ground_pos);
+        // let pos = new Vec3(cur_ground_pos.x, this._origin_y, cur_ground_pos.z);
+        this.node.setPosition(this._cur_position);
         this.onJumpDead();
     }
 

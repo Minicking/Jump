@@ -1,6 +1,7 @@
-import { _decorator, Component, Node, Prefab, Vec3, deserialize, random, randomRange, instantiate, GFXSamplerState, Game, Camera, NodePool, tween, randomRangeInt, Canvas, LabelComponent, CCInteger } from 'cc';
+import { _decorator, Component, Node, Prefab, Vec3, deserialize, random, randomRange, instantiate, GFXSamplerState, Game, Camera, NodePool, tween, randomRangeInt, Canvas, LabelComponent, CCInteger, Quat } from 'cc';
 import { Player } from './Player'
 import { GameStatus, FaceStatus} from './Const'
+import { getRotaionQuat } from './Util'
 
 const { ccclass, property } = _decorator;
 
@@ -18,6 +19,10 @@ export class GameManager extends Component {
     //玩家控制的角色对象
     @property({type: Player})
     public Player: Player = null;
+
+    //另外一队的角色对象
+    @property({type: Node})
+    public OtherTeam: Node = null;
 
     //当前踩着的方块对象
     @property({type: Node})
@@ -39,7 +44,7 @@ export class GameManager extends Component {
     private nextGround: Node = null;
 
     //当前游戏的运行状态
-    private _curState: GameStatus = GameStatus.INIT;
+    private _State: GameStatus = GameStatus.INIT;
 
     //队友游戏运行状态
     private _otherState: GameStatus = GameStatus.INIT;
@@ -53,7 +58,7 @@ export class GameManager extends Component {
 
     private _score = -1;
 
-    set curState(stat: GameStatus){
+    set State(stat: GameStatus){
         switch (stat) {
             case GameStatus.MATCHING:
                 /* 在此处调用SDK进入匹配队列 */
@@ -76,6 +81,12 @@ export class GameManager extends Component {
         }
     }
 
+    set otherState(stat: GameStatus) {
+        switch(stat) {
+
+        }
+    }
+
     // todo 帧同步监听 游戏状态切换在此处根据同步信息进行切换
     // listen
 
@@ -87,11 +98,16 @@ export class GameManager extends Component {
         this.nextGround = this.curGround;
         this._groundList.push(this.curGround);
         this.createGround()
-        // this.gameStart();
+        this.gameStart();
+
+        this.curGround.getPosition()
     }
 
     gameStart(){
-        this.curState = GameStatus.RUNING;
+        this.State = GameStatus.RUNING;
+        var temp_1 = new Quat();
+        this.Player.node.getRotation(temp_1);
+        console.log(temp_1);
     }
 
     reset (){
@@ -116,15 +132,12 @@ export class GameManager extends Component {
         let dz = randomRange(2, 4) * -1;
 
         if(randomRangeInt(1, 100) <= 50){
-            if(this.Player.stat_face == FaceStatus.RU){
-                this.Player.stat_face = FaceStatus.LU;
-            }
+
             new_pos.z += dz;
             new_pos.y = 5;
+
         }else{
-            if(this.Player.stat_face == FaceStatus.LU){
-                this.Player.stat_face = FaceStatus.RU;
-            }
+
             new_pos.x -= dz;
             new_pos.y = 5;
         }
@@ -150,16 +163,21 @@ export class GameManager extends Component {
         
     }
     createGround_End() {
+        /* 每次创建一个方块后,将多余方块销毁,并将所有对象进行偏移,保证当前角色脚下的方块处在世界原点 */
+
+        // 销毁所有超出视野范围的已通过方块对象
         if(this._groundList.length > this.maxGround){
             let node = this._groundList.pop();
             node.destroy();
-        
-            
         }
+
+        // 获取跳跃结束后所有物体需要移动的偏移量
         let curPos = new Vec3()
         this.curGround.getPosition(curPos)
         let dx = curPos.x;
         let dz = curPos.z;
+
+        // 队友当前显示出的所有方块进行同步偏移
         for (let index = 0; index < this._groundList.length; index++) {
             let node = this._groundList[index];
             let nodePos = new Vec3();
@@ -168,11 +186,32 @@ export class GameManager extends Component {
             nodePos.z -= dz;
             node.setPosition(nodePos)
         }
+
+        // 对另一队的角色位置进行同步偏移
+        let otherPlayerPos = new Vec3();
+        this.OtherTeam.getPosition(otherPlayerPos);
+        otherPlayerPos.x -= dx;
+        otherPlayerPos.z -= dz;
+        this.OtherTeam.setPosition(otherPlayerPos);
+
+        // 对自己的角色位置进行同步偏移
         let playerPos = new Vec3()
         this.Player.node.getPosition(playerPos)
         playerPos.x -= dx;
         playerPos.z -= dz;
         this.Player.node.setPosition(playerPos)
+
+        // 设置自己角色的面向方向
+        var x = getRotaionQuat(this.Player.node, this.nextGround)
+        console.log('新的四元数:')
+        console.log(x);
+        console.log(this.Player.node.getPosition())
+        console.log(this.Player.node.getScale())
+        console.log(this.Player.node.getRotation())
+        // this.Player.node.setRotation(x)
+        tween(this.Player.node).to(0.3, {rotation: x}).start();
+
+        // 对主摄像机进行同步偏移
         this.curGround.getPosition(curPos)
         let camera_pos = new Vec3()
         Vec3.add(camera_pos, curPos, this._origin_camera_pos)
@@ -181,15 +220,15 @@ export class GameManager extends Component {
 
     onJumpComplete(event){
         this.createGround();
-        if(this._otherState != GameStatus.offline){
+        if(this.otherState != GameStatus.offline){
             // 此处调用SDK发送消息给队友,将队友的状态改为行动状态
-            this.curState = GameStatus.WAIT;
+            // this.State = GameStatus.WAIT;
         }
     }
     onJumpDead(event){
-        if(this._otherState != GameStatus.offline){
+        if(this.otherState != GameStatus.offline){
             // 此处调用SDK发送消息给队友,将队友的状态改为行动状态
-            this.curState = GameStatus.WAIT;
+            // this.State = GameStatus.WAIT;
         }
     }
 
