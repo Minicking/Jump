@@ -21,29 +21,27 @@ export class Player extends Component {
     
     @property({type: CCFloat})
     public jumpDuration: number = 0.7;    //跳跃持续时间
-    
+
     @property({type: CCFloat})
-    public add_rate = 3;            //跳跃距离增长速率,每秒水平方向移动距离增加量
-    
-    @property({type: CCFloat})
-    public max_distance = 4;        //最大跳跃距离
-    
-    private _origin_y = 0;
-    // private _origin_rotation = new Quat();
-    private _cur_rotation = new Quat();
-    private _cur_position = new Vec3();
+    public max_time = 4;        //最大蓄力时间
+
+    private _origin_y = 0;     //预设高度,由场景编辑时手动设置的高度自动进行赋值.用于角色复位
+
+    private _cur_rotation = new Quat(); //当前角色稳定状态的旋转四元数
+    private _cur_position = new Vec3(); //当前角色稳定状态的位置
+
     private _jump_time = 0;             //跳跃过程中的当前时刻
-    private _distance = 0;              //水平方向跳跃距离
-    private _powner_time = 0;           //蓄力时间
-    private _face = new Vec2();
-    private _axis = new Vec3();
+    private _distance = 0;              //此次跳跃的水平方向跳跃距离,根据蓄力时间计算得到
+    private _powner_time = 0;           //此次跳跃的蓄力时间
+    private _face = new Vec2();         //当前角色位置到下一个方块位置的方向向量
+    private _axis = new Vec3();         //此次跳跃过程中旋转的旋转轴
 
     private _stat_power = false;         //是否处于蓄力状态
     private _stat_jump = false;          //是否处于跳跃状态
 
-    public _ground: Node = null;
-    public _next_ground: Node = null;
-    private _control = false;
+    public _ground: Node = null;        //当前脚下的方块对象
+    public _next_ground: Node = null;   //下一个方块对象
+    private _control = false;           //是否可以对角色进行控制
 
     public onJumpComplete: () => void; //发送跳跃完成事件
     public onJumpDead: () => void; //发送跳跃死亡事件
@@ -138,27 +136,29 @@ export class Player extends Component {
             this._jump_time = 0;
             this.get_face(this._face);
             this._axis = getJumpAxis(this.node, this._next_ground);
-            console.log('旋转轴:'+this._axis)
             this.node.getRotation(this._cur_rotation);
-            this.node.getPosition(this._cur_position)
+            this.node.getPosition(this._cur_position);
+
+            // 根据蓄力时间以及预设的公式计算此次跳跃的实际跳跃距离
+            this._distance = 1*this._powner_time*this._powner_time + 1*this._powner_time;
         }
     }
 
     action_power (dt) {
         if(this._stat_power){
-            if(this._distance < this.max_distance){
-                let dt_distance = dt * this.add_rate;
-                this._distance += dt_distance;
+            if(this._powner_time < this.max_time){
+                // let dt_distance = dt * this.add_rate;
+                // this._distance += dt_distance;
                 this._powner_time += dt;
 
                 let PlayerPos = new Vec3();
                 this.node.getPosition(PlayerPos);
-                PlayerPos.y = this._origin_y - 0.272 * (this._distance / this.max_distance);
+                PlayerPos.y = this._origin_y - 0.272 * (this._powner_time / this.max_time);
                 this.node.setPosition(PlayerPos);
 
                 let groundScale = new Vec3();
                 this._ground.getScale(groundScale);
-                groundScale.y = 1 - this._distance / this.max_distance * 0.5;
+                groundScale.y = 1 - this._powner_time / this.max_time * 0.5;
                 this._ground.setScale(groundScale);
 
             }
