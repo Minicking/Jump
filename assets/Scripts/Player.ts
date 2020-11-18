@@ -34,6 +34,7 @@ export class Player extends Component {
     private _cur_position = new Vec3();
     private _jump_time = 0;             //跳跃过程中的当前时刻
     private _distance = 0;              //水平方向跳跃距离
+    private _powner_time = 0;           //蓄力时间
     private _face = new Vec2();
     private _axis = new Vec3();
 
@@ -77,12 +78,14 @@ export class Player extends Component {
             if(this._stat_power == false && this._stat_jump == false){
                 this._distance = 0;
                 this._stat_power = true;
+                this._powner_time = 0;
+                this._control = false;
             }
         }
     }
 
     onTouchUp(event) {
-        if(this.control && this._stat_power){
+        if(this._stat_power){
 
             this._stat_power = false;
             this._ground.setScale(new Vec3(1, 1, 1));
@@ -101,7 +104,9 @@ export class Player extends Component {
             if (event.keyCode == macro.KEY.space){
                 if(this._stat_power == false && this._stat_jump == false){
                     this._distance = 0;
+                    this._powner_time = 0;
                     this._stat_power = true;
+                    this._control = false;
                 }
             }else if (event.keyCode == macro.KEY.up){
     
@@ -111,20 +116,18 @@ export class Player extends Component {
 
     onKeyUp(event: EventKeyboard){
         
-        if(this.control){
-            if (event.keyCode == macro.KEY.space){
-                if(this._stat_power){
-    
-                    this._stat_power = false;
-                    this._ground.setScale(new Vec3(1, 1, 1));
-    
-                    let PlayerPos = new Vec3();
-                    this.node.getPosition(PlayerPos);
-                    PlayerPos.y = this._origin_y;
-                    this.node.setPosition(PlayerPos);
-    
-                    this.start_jump();
-                }
+        if (event.keyCode == macro.KEY.space){
+            if(this._stat_power){
+
+                this._stat_power = false;
+                this._ground.setScale(new Vec3(1, 1, 1));
+
+                let PlayerPos = new Vec3();
+                this.node.getPosition(PlayerPos);
+                PlayerPos.y = this._origin_y;
+                this.node.setPosition(PlayerPos);
+
+                this.start_jump();
             }
         }
     }
@@ -146,6 +149,7 @@ export class Player extends Component {
             if(this._distance < this.max_distance){
                 let dt_distance = dt * this.add_rate;
                 this._distance += dt_distance;
+                this._powner_time += dt;
 
                 let PlayerPos = new Vec3();
                 this.node.getPosition(PlayerPos);
@@ -223,6 +227,7 @@ export class Player extends Component {
 
         if(posInRect(new Vec2(cur_pos.x, cur_pos.z), new Vec2(cur_ground_pos.x, cur_ground_pos.z), 0.5)){
             console.log('no jump over')
+            this._control = true;
         }else if(posInRect(new Vec2(cur_pos.x, cur_pos.z), new Vec2(next_ground_pos.x, next_ground_pos.z), .5)){
             if(this.onJumpComplete){
                 this.node.getPosition(this._cur_position)
@@ -245,6 +250,7 @@ export class Player extends Component {
         // let pos = new Vec3(cur_ground_pos.x, this._origin_y, cur_ground_pos.z);
         this.node.setPosition(this._cur_position);
         this.onJumpDead();
+        this._control = true;
     }
 
     update (deltaTime: number) {

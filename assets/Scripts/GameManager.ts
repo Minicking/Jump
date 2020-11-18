@@ -209,7 +209,9 @@ export class GameManager extends Component {
         console.log(this.Player.node.getScale())
         console.log(this.Player.node.getRotation())
         // this.Player.node.setRotation(x)
-        tween(this.Player.node).to(0.3, {rotation: x}).start();
+        tween(this.Player.node).to(0.3, {rotation: x}, {onComplete:function(this){
+            this.Player._control = true;
+        }.bind(this)}).start();
 
         // 对主摄像机进行同步偏移
         this.curGround.getPosition(curPos)
