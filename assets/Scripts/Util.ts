@@ -36,10 +36,12 @@ function getRotaionQuat(A:Node, B:Node){
     A.getPosition(cur_pos);
     B.getPosition(tar_pos);
     temp2.set(tar_pos.x-cur_pos.x, tar_pos.z - cur_pos.z);
-    var ang = temp1.angle(temp2);
-    console.log(tar_pos)
-    console.log(cur_pos)
-    console.log('ang:'+ang)
+
+    var ang = temp2.signAngle(temp1)
+    if(ang < 0) {
+        ang += (2*3.1415926);
+    }
+
     Quat.rotateY(temp3, temp3, ang)
     return temp3;
 

@@ -120,7 +120,7 @@ export class GameManager extends Component {
         this.State = GameStatus.RUNING;
         var temp_1 = new Quat();
         this.Player.node.getRotation(temp_1);
-        console.log(temp_1);
+
     }
 
     reset (){
@@ -216,11 +216,7 @@ export class GameManager extends Component {
 
         // 设置自己角色的面向方向
         var x = getRotaionQuat(this.Player.node, this.nextGround)
-        console.log('新的四元数:')
-        console.log(x);
-        console.log(this.Player.node.getPosition())
-        console.log(this.Player.node.getScale())
-        console.log(this.Player.node.getRotation())
+
         // this.Player.node.setRotation(x)
         tween(this.Player.node).to(0.3, {rotation: x}, {onComplete:function(this){
             this.Player._control = true;

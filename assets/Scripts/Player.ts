@@ -213,7 +213,7 @@ export class Player extends Component {
         this.node.getPosition(tempVec_1);
         this._next_ground.getPosition(tempVec_2);
         out.set(tempVec_2.x - tempVec_1.x, tempVec_2.z - tempVec_1.z);
-        console.log('获取到面向方向向量:'+out)
+
     }
 
     action_jump_end(){
@@ -226,7 +226,7 @@ export class Player extends Component {
         this.node.getPosition(cur_pos)
 
         if(posInRect(new Vec2(cur_pos.x, cur_pos.z), new Vec2(cur_ground_pos.x, cur_ground_pos.z), 0.5)){
-            console.log('no jump over')
+
             this._control = true;
         }else if(posInRect(new Vec2(cur_pos.x, cur_pos.z), new Vec2(next_ground_pos.x, next_ground_pos.z), .5)){
             if(this.onJumpComplete){
@@ -234,8 +234,6 @@ export class Player extends Component {
                 this.onJumpComplete();
             }
         }else{
-            console.log('dead!')
-
             let dead_pos = new Vec3()
             dead_pos.set(cur_pos)
             dead_pos.y = -0.5
