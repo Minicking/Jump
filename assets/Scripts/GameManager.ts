@@ -36,6 +36,10 @@ export class GameManager extends Component {
     @property({type: LabelComponent})
     public socreLabel: LabelComponent = null;
 
+    //UI
+    @property({type: Node})
+    public UI: Node = null;
+
     //最大的方块存留数,多余的地块会被销毁
     @property({type: CCInteger})
     public maxGround: number = 6;
@@ -105,13 +109,14 @@ export class GameManager extends Component {
         this.Player._ground = this.curGround;
         this.nextGround = this.curGround;
         this._groundList.push(this.curGround);
-        this.createGround()
-        this.gameStart();
+        
 
-        this.curGround.getPosition()
     }
 
     gameStart(){
+        this.UI.getChildByName('StartBoard').active = false;
+        this.UI.getChildByName('MainBoard').active = true;
+        this.createGround()
         this.State = GameStatus.RUNING;
         var temp_1 = new Quat();
         this.Player.node.getRotation(temp_1);
@@ -196,11 +201,11 @@ export class GameManager extends Component {
         }
 
         // 对另一队的角色位置进行同步偏移
-        let otherPlayerPos = new Vec3();
-        this.OtherTeam.getPosition(otherPlayerPos);
-        otherPlayerPos.x -= dx;
-        otherPlayerPos.z -= dz;
-        this.OtherTeam.setPosition(otherPlayerPos);
+        // let otherPlayerPos = new Vec3();
+        // this.OtherTeam.getPosition(otherPlayerPos);
+        // otherPlayerPos.x -= dx;
+        // otherPlayerPos.z -= dz;
+        // this.OtherTeam.setPosition(otherPlayerPos);
 
         // 对自己的角色位置进行同步偏移
         let playerPos = new Vec3()
