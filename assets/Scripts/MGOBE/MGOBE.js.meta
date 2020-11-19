@@ -1,0 +1,19 @@
+{
+  "ver": "4.0.1",
+  "importer": "javascript",
+  "imported": true,
+  "uuid": "1ad7f469-2435-4cd4-bdc5-cf59a71abc2d",
+  "files": [
+    ".js"
+  ],
+  "subMetas": {},
+  "userData": {
+    "importAsPlugin": true,
+    "moduleId": "project:///assets/Scripts/MGOBE/MGOBE.js",
+    "importerSettings": 0,
+    "isPlugin": true,
+    "loadPluginInWeb": true,
+    "loadPluginInNative": true,
+    "loadPluginInEditor": true
+  }
+}

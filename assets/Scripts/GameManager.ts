@@ -1,9 +1,14 @@
 import { _decorator, Component, Node, Prefab, Vec3, deserialize, random, randomRange, instantiate, GFXSamplerState, Game, Camera, NodePool, tween, randomRangeInt, Canvas, LabelComponent, CCInteger, Quat, CCFloat } from 'cc';
+const { ccclass, property } = _decorator;
 import { Player } from './Player'
 import { GameStatus, FaceStatus} from './Const'
 import { getRotaionQuat } from './Util'
+import { gameInfo, config } from './Config'
+import './MGOBE/MGOBE.js';
+// console.log(MGOBE)
+const Listener = MGOBE.Listener;
+const Room = MGOBE.Room;
 
-const { ccclass, property } = _decorator;
 
 @ccclass('GameManager')
 export class GameManager extends Component {
@@ -103,6 +108,17 @@ export class GameManager extends Component {
     // listen
 
     start (){
+        // 初始化SDK
+        Listener.init(gameInfo, config, event => {
+            if(event.code === 0){
+                console.log('初始化SDK成功');
+            }else{
+                console.log('初始化SDK失败,code:'+event.code);
+
+
+            }
+        });
+        
         this.camera.node.getPosition(this._origin_camera_pos)
         this.Player.onJumpComplete = this.onJumpComplete.bind(this);
         this.Player.onJumpDead = this.onJumpDead.bind(this);

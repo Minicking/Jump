@@ -1,0 +1,138 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "MatchingButton",
+  "_objFlags": 0,
+  "_native": "",
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 2,
+  "events": [],
+  "_duration": 0,
+  "_keys": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "_stepness": 0,
+  "_curves": [
+    {
+      "modifiers": [
+        "x"
+      ],
+      "data": {
+        "keys": 0,
+        "values": [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        "easingMethods": {}
+      },
+      "commonTarget": 0
+    },
+    {
+      "modifiers": [
+        "y"
+      ],
+      "data": {
+        "keys": 1,
+        "values": [
+          1,
+          1.090759955005237,
+          1.090759955005237,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "easingMethods": {}
+      },
+      "commonTarget": 0
+    },
+    {
+      "modifiers": [
+        "z"
+      ],
+      "data": {
+        "keys": 2,
+        "values": [
+          0,
+          1.090759955005237,
+          1.090759955005237,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        "easingMethods": {}
+      },
+      "commonTarget": 0
+    }
+  ],
+  "_commonTargets": [
+    {
+      "modifiers": [
+        "scale"
+      ]
+    }
+  ],
+  "_hash": 3379869087
+}
