@@ -1,0 +1,50 @@
+[
+  {
+    "__type__": "cc.AnimationClip",
+    "_name": "Matching",
+    "_objFlags": 0,
+    "_native": "",
+    "sample": 60,
+    "speed": 1,
+    "wrapMode": 2,
+    "events": [],
+    "_duration": 2,
+    "_keys": [
+      [
+        0,
+        0.5,
+        1,
+        1.5,
+        2
+      ]
+    ],
+    "_stepness": 0,
+    "_curves": [
+      {
+        "modifiers": [
+          {
+            "__id__": 1
+          },
+          "string"
+        ],
+        "data": {
+          "keys": 0,
+          "values": [
+            "匹配中",
+            "匹配中.",
+            "匹配中..",
+            "匹配中...",
+            "匹配中"
+          ],
+          "easingMethods": {}
+        }
+      }
+    ],
+    "_commonTargets": [],
+    "_hash": 4095091359
+  },
+  {
+    "__type__": "cc.animation.ComponentPath",
+    "component": "cc.Label"
+  }
+]

@@ -1,18 +1,16 @@
-import { _decorator, Component, Node, Prefab, Vec3, deserialize, random, randomRange, instantiate, GFXSamplerState, Game, Camera, NodePool, tween, randomRangeInt, Canvas, LabelComponent, CCInteger, Quat, CCFloat } from 'cc';
+import { _decorator, Component, Node, Prefab, Vec3, deserialize, random, randomRange, instantiate, GFXSamplerState, Game, Camera, NodePool, tween, randomRangeInt, Canvas, LabelComponent, CCInteger, Quat, CCFloat, Label } from 'cc';
 const { ccclass, property } = _decorator;
 import { Player } from './Player'
 import { GameStatus, FaceStatus} from './Const'
 import { getRotaionQuat } from './Util'
-import { gameInfo, config } from './Config'
+import { gameInfo, config, matchPlayersPara, playerInfo } from './Config'
+import { SDK } from './Base'
 import './MGOBE/MGOBE.js';
-// console.log(MGOBE)
-const Listener = MGOBE.Listener;
-const Room = MGOBE.Room;
-
 
 @ccclass('GameManager')
 export class GameManager extends Component {
-    
+    public SDK = new SDK();
+
     //角色的预制件
     @property({type: Prefab})
     public playerPrfb: Prefab = null;
@@ -104,41 +102,110 @@ export class GameManager extends Component {
         }
     }
 
-    // todo 帧同步监听 游戏状态切换在此处根据同步信息进行切换
-    // listen
+    async start (){
+        // // 初始化SDK,会生成playerId
+        // let code = await this.SDK.init();
+        // if(code === MGOBE.ErrCode.EC_OK) {
+        //     console.log('初始化SDK成功');
+        //     console.log('my id:', MGOBE.Player.id)
 
-    start (){
-        // 初始化SDK
-        Listener.init(gameInfo, config, event => {
-            if(event.code === 0){
-                console.log('初始化SDK成功');
-            }else{
-                console.log('初始化SDK失败,code:'+event.code);
+        //     // this.SDK.Room.
+        //     this.SDK.Room.onUpdate = this.roomUpdate.bind(this);
+        //     this.UI.getChildByName('StartBoard').active = true;
+        //     this.UI.getChildByName('MatchingBoard').active = false;
+        //     this.UI.getChildByName('MainBoard').active = false;
+        //     this.camera.node.getPosition(this._origin_camera_pos)
+        //     this.Player.onJumpComplete = this.onJumpComplete.bind(this);
+        //     this.Player.onJumpDead = this.onJumpDead.bind(this);
+        //     this.Player._ground = this.curGround;
+        //     this.nextGround = this.curGround;
+        //     this._groundList.push(this.curGround);
+        // } else {
+        //     console.log('初始化SDK失败,code:'+code);
+        // }
 
+    }
 
-            }
-        });
-        
-        this.camera.node.getPosition(this._origin_camera_pos)
-        this.Player.onJumpComplete = this.onJumpComplete.bind(this);
-        this.Player.onJumpDead = this.onJumpDead.bind(this);
-        this.Player._ground = this.curGround;
-        this.nextGround = this.curGround;
-        this._groundList.push(this.curGround);
-        
+    // 手动触发初始化,测试使用
+    async startInit() {
+        // 初始化SDK,会生成playerId
+        let g = gameInfo;
+        g.openId = this.UI.getChildByName('InitBoard').getChildByName('EditBox').getChildByName('TEXT_LABEL').getComponent(Label).string;
+        console.log('openID:', g.openId);
+        let code = await this.SDK.init(g);
+        if(code === MGOBE.ErrCode.EC_OK) {
+            console.log('初始化SDK成功');
+            console.log('my id:', MGOBE.Player.id)
+
+            // this.SDK.Room.
+            this.SDK.Room.onUpdate = this.roomUpdate.bind(this);
+            this.UI.getChildByName('StartBoard').active = true;
+            this.UI.getChildByName('MatchingBoard').active = false;
+            this.UI.getChildByName('MainBoard').active = false;
+            this.UI.getChildByName('InitBoard').active = false;
+            this.camera.node.getPosition(this._origin_camera_pos)
+            this.Player.onJumpComplete = this.onJumpComplete.bind(this);
+            this.Player.onJumpDead = this.onJumpDead.bind(this);
+            this.Player._ground = this.curGround;
+            this.nextGround = this.curGround;
+            this._groundList.push(this.curGround);
+        } else {
+            console.log('初始化SDK失败,code:'+code);
+        }
+
+    }
+
+    // 每次房间有数据变化会触发此方法,在此处进行UI更新
+    roomUpdate() {
 
     }
 
     gameStart(){
         this.UI.getChildByName('StartBoard').active = false;
+        this.UI.getChildByName('MatchingBoard').active = false;
         this.UI.getChildByName('MainBoard').active = true;
         this.createGround()
         this.State = GameStatus.RUNING;
         var temp_1 = new Quat();
         this.Player.node.getRotation(temp_1);
+    }
+
+    async gameMatching() {
+        console.log('开始匹配:', gameInfo.openId)
+        this.UI.getChildByName('StartBoard').active = false;
+        this.UI.getChildByName('MatchingBoard').active = true;
+        let code = await this.SDK.matching();
+        if(code === 0) {
+            console.log('匹配成功');
+            this.UI.getChildByName('StartBoard').active = false;
+            this.UI.getChildByName('MatchingBoard').active = false;
+            this.UI.getChildByName('MainBoard').active = true;
+        } else {
+            console.log('匹配失败', code);
+            this.UI.getChildByName('StartBoard').active = true;
+            this.UI.getChildByName('MatchingBoard').active = false;
+            this.UI.getChildByName('MainBoard').active = false;
+        }
 
     }
 
+    async gameMatchingCancel() {
+        let code = await this.SDK.cancelMatchinig();
+
+        if (code === 0) {
+            console.log('取消匹配成功')
+            this.UI.getChildByName('StartBoard').active = true;
+            this.UI.getChildByName('MatchingBoard').active = false;
+        } else {
+            console.log('取消匹配失败')
+        }
+    }
+
+    async getRoomInfo() {
+        let info = await this.SDK.getRoomInfo();
+        console.log('房间信息:', info);
+    }
+    
     reset (){
         for (let index = 0; index < this._groundList.length; index++) {
             let node = this._groundList.pop();
