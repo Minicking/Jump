@@ -2,6 +2,7 @@ import { matchPlayersPara, config } from './Config'
 export class SDK {
     Listener = MGOBE.Listener;
     Room = new MGOBE.Room();
+    Group = new MGOBE.Group();
 
     // 状态变量
     is_matching = false;
@@ -16,6 +17,7 @@ export class SDK {
                 resolve(event.code)
                 if(event.code === MGOBE.ErrCode.EC_OK){
                     this.Listener.add(this.Room);
+                    this.Listener.add(this.Group);
                     this.setBroadcast();
                 }
             });

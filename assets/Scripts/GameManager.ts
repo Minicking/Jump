@@ -90,7 +90,7 @@ export class GameManager extends Component {
             case GameStatus.END:
                 this.Player.control = false;
                 break;
-        
+
             default:
                 break;
         }
